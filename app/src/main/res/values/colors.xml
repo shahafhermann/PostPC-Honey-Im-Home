@@ -3,4 +3,13 @@
     <color name="colorPrimary">#6200EE</color>
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
+
+    <color name="start_tracking_button">#0D34C0</color>
+    <color name="start_tracking_button_text">#E8E8E8</color>
+
+    <color name="stop_tracking_button">#E8E8E8</color>
+    <color name="stop_tracking_button_text">#0D34C0</color>
+
+    <color name="regular_button">#CCCCCC</color>
+    <color name="regular_button_text">#3C3C3C</color>
 </resources>

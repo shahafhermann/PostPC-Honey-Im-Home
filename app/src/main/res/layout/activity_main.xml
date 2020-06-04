@@ -6,13 +6,255 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+   <!-- Home location -->
+   <TextView
+       android:id="@+id/homeLocationTitle"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toTopOf="parent"
+
+       android:layout_marginTop="26dp"
+       android:layout_marginStart="26dp"
+       android:layout_marginEnd="26dp"
+       android:gravity="center"
+       android:text="@string/home_location_title"
+       android:textSize="26sp"
+       />
+
+   <View
+       android:id="@+id/homeTitleDivider"
+       android:layout_width="match_parent"
+       android:layout_height="1dp"
+       app:layout_constraintTop_toBottomOf="@id/homeLocationTitle"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       android:background="?android:attr/listDivider"
+
+       android:layout_marginTop="5dp"
+       android:layout_marginStart="65dp"
+       android:layout_marginEnd="65dp"
+       />
+
+   <!-- Home Latitude -->
+   <TextView
+       android:id="@+id/homeLatitudeTitle"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/homeTitleDivider"
+
+       android:layout_marginTop="16dp"
+       android:gravity="center"
+       android:text="@string/latitude_title"
+       android:textSize="20sp"
+       />
+
+   <TextView
+       android:id="@+id/homeLatitudeContent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/homeLatitudeTitle"
+
+       android:layout_marginTop="5dp"
+       android:gravity="center"
+       android:text="@string/info_default"
+       android:textSize="20sp"
+       />
+
+   <!-- Home Longitude -->
+   <TextView
+       android:id="@+id/homeLongitudeTitle"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/homeLatitudeContent"
+
+       android:layout_marginTop="20dp"
+       android:gravity="center"
+       android:text="@string/longitude_title"
+       android:textSize="20sp"
+       />
+
+   <TextView
+       android:id="@+id/homeLongitudeContent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/homeLongitudeTitle"
+
+       android:layout_marginTop="5dp"
+       android:gravity="center"
+       android:text="@string/info_default"
+       android:textSize="20sp"
+       />
+
+   <!-- Current location -->
+   <TextView
+       android:id="@+id/curLocationTitle"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/homeLongitudeContent"
+
+       android:layout_marginTop="30dp"
+       android:layout_marginStart="26dp"
+       android:layout_marginEnd="26dp"
+       android:gravity="center"
+       android:text="@string/cur_location_title"
+       android:textSize="26sp"
+       />
+
+   <View
+        android:id="@+id/currentTitleDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        app:layout_constraintTop_toBottomOf="@id/curLocationTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="?android:attr/listDivider"
+
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="65dp"
+        android:layout_marginEnd="65dp"
+        />
+
+   <!-- Current Latitude -->
+   <TextView
+       android:id="@+id/curLatitudeTitle"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/currentTitleDivider"
+
+       android:layout_marginTop="16dp"
+       android:layout_marginStart="42dp"
+       android:text="@string/latitude_title"
+       android:textSize="16sp"
+       />
+
+   <TextView
+       android:id="@+id/curLatitudeContent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toEndOf="@id/curLatitudeTitle"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toTopOf="@id/curLatitudeTitle"
+
+       android:layout_marginEnd="26dp"
+       android:text="@string/info_default"
+       android:textSize="16sp"
+       />
+
+   <!-- Current Longitude -->
+   <TextView
+       android:id="@+id/curLongitudeTitle"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/curLatitudeContent"
+
+       android:layout_marginTop="20dp"
+       android:layout_marginStart="42dp"
+       android:text="@string/longitude_title"
+       android:textSize="16sp"
+       />
+
+   <TextView
+       android:id="@+id/curLongitudeContent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toEndOf="@id/curLongitudeTitle"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toTopOf="@id/curLongitudeTitle"
+
+       android:layout_marginEnd="26dp"
+       android:text="@string/info_default"
+       android:textSize="16sp"
+       />
+
+   <!-- Accuracy -->
+   <TextView
+       android:id="@+id/accuracyTitle"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/curLongitudeContent"
+
+       android:layout_marginTop="20dp"
+       android:layout_marginStart="42dp"
+       android:text="@string/accuracy_title"
+       android:textSize="16sp"
+       />
+
+   <TextView
+       android:id="@+id/accuracyContent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:layout_constraintStart_toEndOf="@id/accuracyTitle"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintTop_toTopOf="@id/accuracyTitle"
+
+       android:layout_marginEnd="26dp"
+       android:text="@string/info_default"
+       android:textSize="16sp"
+       />
+
+   <!-- Actions -->
+   <!-- Clear Home -->
+   <Button
+       android:id="@+id/clearButton"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:layout_constraintBottom_toTopOf="@id/setButton"
+       app:layout_constraintStart_toStartOf="@id/setButton"
+       app:layout_constraintEnd_toEndOf="@id/setButton"
+
+       android:layout_marginStart="24dp"
+       android:layout_marginEnd="24dp"
+       android:textSize="16sp"
+       android:text="@string/clear_home"
+       android:enabled="false"
+       />
+
+   <!-- Set Home -->
+   <Button
+       android:id="@+id/setButton"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:layout_constraintBottom_toTopOf="@id/trackButton"
+       app:layout_constraintStart_toStartOf="parent"
+
+       android:layout_marginStart="24dp"
+       android:layout_marginEnd="24dp"
+       android:layout_marginBottom="10dp"
+       android:textSize="16sp"
+       android:text="@string/set_home"
+       android:enabled="false"
+       />
+
+   <!-- Track -->
+   <Button
+       android:id="@+id/trackButton"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:layout_constraintBottom_toBottomOf="parent"
+       app:layout_constraintStart_toStartOf="@id/setButton"
+       app:layout_constraintEnd_toEndOf="@id/setButton"
+
+       android:layout_marginStart="24dp"
+       android:layout_marginEnd="24dp"
+       android:layout_marginBottom="16dp"
+       android:textSize="16sp"
+       android:text="@string/start_tracking"
+       android:theme="@style/StartTrackingButton"
+       />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
