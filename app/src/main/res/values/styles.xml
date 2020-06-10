@@ -8,20 +8,4 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="StartTrackingButton" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@color/start_tracking_button</item>
-        <item name="android:textColor">@color/start_tracking_button_text</item>
-    </style>
-
-    <style name="StopTrackingButton" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@color/stop_tracking_button</item>
-        <item name="android:textColor">@color/stop_tracking_button_text</item>
-    </style>
-
-<!--    <style name="RegularButton" parent="Widget.AppCompat.Button.Colored">-->
-<!--        <item name="colorButtonNormal">@color/regular_button</item>-->
-<!--        <item name="android:colorButtonNormal">@color/regular_button</item>-->
-<!--        <item name="android:textColor">@color/regular_button_text</item>-->
-<!--    </style>-->
-
 </resources>

@@ -1,15 +1,18 @@
 package com.ppc.honeyimhome;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.SmsManager;
 import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
@@ -21,16 +24,16 @@ public class MessageManager {
     private String curPhone;
 
     private static SharedPreferences prefs;
-    private static final String LOCATION_PREFS_NAME = "smsPreference";
     private static final String SP_PHONE = "phoneNumber";
 
     public static final String NTFC_CHANNEL_NAME = "HoneyImHome!";
     public static final String NTFC_CHANNEL_ID = "smsNtfc";
+    public static final String NTFC_CHANNEL_DESC = "Notification Channel for SMS";
     public static final int NTFC_ID = 5;
 
     public static final String ERROR_TAG = "SmsBroadcastReceiver";
     public static final int REQUEST_CODE_PERMISSION_SEND_TEXT = 222;
-    public static final String SEND_SMS_ACTION = "POST_PC.ACTION_SEND_SMS";
+    public static final String SEND_SMS_ACTION = "sendSms";
 
     public static final String PHONE_NUMBER_KEY = "phoneNumber";
     public static final String SMS_CONTENT_KEY = "smsContent";
@@ -62,14 +65,11 @@ public class MessageManager {
         smsManager.sendTextMessage(curPhone, null, content, sentIntent, null);
     }
 
-    public void createNotificationChannel(Context context, Intent intent) {
-        String phone = intent.getStringExtra(PHONE_NUMBER_KEY);
-        String content = intent.getStringExtra(SMS_CONTENT_KEY);
-
+    public void createNotificationChannel(Context context) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String description = String.format("sending sms to %s: %s", phone, content);
+            String description = NTFC_CHANNEL_DESC;
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(NTFC_CHANNEL_ID,
                     NTFC_CHANNEL_NAME, importance);
@@ -84,5 +84,24 @@ public class MessageManager {
                 Log.e(ERROR_TAG, "NTFC Channel Creation Error");
             }
         }
+    }
+
+    public String getPhone() { return curPhone; }
+
+    public void setPhone(String number) {
+        this.curPhone = number;
+        prefs.edit()
+                .putString(SP_PHONE, curPhone)
+                .apply();
+    }
+
+    /**
+     * Check if the user has granted fine-location permissions.
+     * @return true if permission was granted, false otherwise
+     */
+    public boolean hasSmsPermission() {
+        return ActivityCompat
+                .checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
+                PackageManager.PERMISSION_GRANTED;
     }
 }

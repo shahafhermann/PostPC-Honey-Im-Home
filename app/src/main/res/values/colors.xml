@@ -12,4 +12,7 @@
 
     <color name="regular_button">#CCCCCC</color>
     <color name="regular_button_text">#3C3C3C</color>
+
+    <color name="sms_button">#4CAF50</color>
+    <color name="sms_button_text">#E8E8E8</color>
 </resources>

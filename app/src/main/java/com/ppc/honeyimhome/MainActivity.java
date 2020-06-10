@@ -5,27 +5,35 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String PERMISSION_REQ_MSG
+    private static final String LOCATION_PERMISSION_REQ_MSG
             = "Thip app can't do much without location permissions...";
+    private static final String SMS_PERMISSION_REQ_MSG
+            = "Without SMS permissions your honey will never know that you're home!";
 
     private App app;
     private LocationTracker locationTracker;
@@ -33,7 +41,10 @@ public class MainActivity extends AppCompatActivity {
     private Activity mainActivity = this;
     BroadcastReceiver locationBroadcastReceiver;
     BroadcastReceiver smsBroadcastReceiver;
+    LocalBroadcastManager localBroadcastManager;
 
+    private Button smsButton;
+    private Button deletePhoneButton;
     private Button trackButton;
     private Button setHomeButton;
     private Button clearHomeButton;
@@ -42,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView accuracyContent;
     private TextView homeLatitudeContent;
     private TextView homeLongitudeContent;
+
+    private String smsContent = "Honey I'm Sending a Test Message!";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +71,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setViews() {
+        deletePhoneButton = findViewById(R.id.deletePhoneButton);
+        deletePhoneButton.setOnClickListener(new OnDeletePhoneButtonClick());
+
+        smsButton = findViewById(R.id.setPhoneButton);
+        smsButton.setOnClickListener(new OnSmsButtonClick());
+
         trackButton = findViewById(R.id.trackButton);
         trackButton.setOnClickListener(new OnTrackButtonClick());
 
-        setHomeButton = findViewById(R.id.setButton);
+        setHomeButton = findViewById(R.id.setHomeButton);
         setHomeButton.setOnClickListener(new OnSetHomeButtonClick());
 
         clearHomeButton = findViewById(R.id.clearButton);
@@ -127,9 +146,10 @@ public class MainActivity extends AppCompatActivity {
      * Set a SMS broadcast receiver
      */
     private void setSmsBroadcastReceiver() {
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
         smsBroadcastReceiver = new LocalSendSmsBroadcastReceiver();
         IntentFilter filter = new IntentFilter(MessageManager.SEND_SMS_ACTION);
-        this.registerReceiver(smsBroadcastReceiver, filter);
+        localBroadcastManager.registerReceiver(smsBroadcastReceiver, filter);
     }
 
     /**
@@ -148,22 +168,26 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(MessageManager.ERROR_TAG, "Phone or content invalid");
                 }
 
-                messageManager.sendText(intent);
+                // Notification
 
-                messageManager.createNotificationChannel(context, intent);
+                messageManager.createNotificationChannel(context);
 
                 Intent intentToOpen = new Intent(app, MainActivity.class);
                 intentToOpen
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 PendingIntent pendingIntent = PendingIntent
                         .getActivity(app, 0, intentToOpen, 0);
 
+                String ntfcBody = String.format("sending sms to %s: %s", phone, content);
                 NotificationCompat.Builder builder = new NotificationCompat
                         .Builder(app, MessageManager.NTFC_CHANNEL_ID)
                         .setSmallIcon(R.drawable.notification_icon)
-                        .setContentTitle("My notification")
-                        .setContentText("Hello World!")
+                        .setContentTitle(app.NAME)
+                        .setContentText(ntfcBody)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        // Make sure it shows the full text
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(ntfcBody))
                         // Set the intent that will fire when the user taps the notification
                         .setContentIntent(pendingIntent)
                         .setAutoCancel(true);
@@ -172,6 +196,9 @@ public class MainActivity extends AppCompatActivity {
 
                 // notificationId is a unique int for each notification that you must define
                 notificationManager.notify(MessageManager.NTFC_ID, builder.build());
+
+                // Actually send
+                messageManager.sendText(intent);
 
             } else {  // No permission
                 Log.e(MessageManager.ERROR_TAG, "No SMS permission granted");
@@ -186,14 +213,14 @@ public class MainActivity extends AppCompatActivity {
     private void toggleTrackButton(boolean startTracking) {
         if (startTracking) {
             trackButton.setText(R.string.stop_tracking);
-            trackButton.setBackgroundColor(getResources()
-                    .getColor(R.color.stop_tracking_button));
+            trackButton.setBackgroundTintList(ColorStateList
+                    .valueOf(getResources().getColor(R.color.stop_tracking_button)));
             trackButton.setTextColor(getResources()
                     .getColor(R.color.stop_tracking_button_text));
         } else {
             trackButton.setText(R.string.start_tracking);
-            trackButton.setBackgroundColor(getResources()
-                    .getColor(R.color.start_tracking_button));
+            trackButton.setBackgroundTintList(ColorStateList
+                    .valueOf(getResources().getColor(R.color.start_tracking_button)));
             trackButton.setTextColor(getResources()
                     .getColor(R.color.start_tracking_button_text));
         }
@@ -274,6 +301,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Toggle the clear home location button
+     * @param hasPhone Indicates if it should be enabled or not
+     */
+    private void toggleSmsButtons(boolean hasPhone) {
+        if (hasPhone) {
+            smsButton.setText(app.getResources().getString(R.string.test_sms));
+            deletePhoneButton.setEnabled(true);
+        } else {
+            smsButton.setText(app.getResources().getString(R.string.set_phone));
+            deletePhoneButton.setEnabled(false);
+        }
+    }
+
+    /**
      * Update UI for home location
      */
     private void updateHomeLocationLabels(boolean reset) {
@@ -284,6 +325,79 @@ public class MainActivity extends AppCompatActivity {
             LocationInfo homeLocation = locationTracker.getHomeLocation();
             homeLatitudeContent.setText(String.valueOf(homeLocation.getLatitude()));
             homeLongitudeContent.setText(String.valueOf(homeLocation.getLongitude()));
+        }
+    }
+
+    /**
+     * Show a dialog and request a phone number input, then save it (or delete).
+     */
+    private void setPhoneNumber() {
+        final EditText input = new EditText(MainActivity.this);
+        input.setPadding(50, 100, 50, 15);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Set a Phone Number")
+                .setView(input)
+                .setPositiveButton("Confirm",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Save to SP
+                                messageManager.setPhone(input.getText().toString());
+                                // Edit the button
+                                toggleSmsButtons(true);
+                            }
+                        })
+                .setNegativeButton("Delete",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                                // Save to SP
+                                messageManager.setPhone("");
+                                toggleSmsButtons(false);
+                            }
+                        })
+                .show();
+    }
+
+    /**
+     * Listener for the Tracking button click action
+     */
+    private class OnDeletePhoneButtonClick implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            messageManager.setPhone("");
+            toggleSmsButtons(false);
+        }
+    }
+
+    /**
+     * Listener for the Tracking button click action
+     */
+    private class OnSmsButtonClick implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            String phone = messageManager.getPhone();
+            if ((phone != null) && !phone.isEmpty()) {
+                // The phone number is set
+                Intent smsIntent = new Intent();
+                smsIntent.setAction(MessageManager.SEND_SMS_ACTION);
+                smsIntent.putExtra(MessageManager.PHONE_NUMBER_KEY, phone);
+                smsIntent.putExtra(MessageManager.SMS_CONTENT_KEY, smsContent);
+                localBroadcastManager.sendBroadcast(smsIntent);
+            } else {
+                if (messageManager.hasSmsPermission()) {
+                    // Set the phone number
+                    setPhoneNumber();
+
+                } else {
+                    ActivityCompat.requestPermissions(
+                            mainActivity,
+                            new String[]{Manifest.permission.SEND_SMS},
+                            MessageManager.REQUEST_CODE_PERMISSION_SEND_TEXT);
+                }
+            }
         }
     }
 
@@ -347,18 +461,26 @@ public class MainActivity extends AppCompatActivity {
 
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) { // cool
             if (requestCode == LocationTracker.REQUEST_CODE_PERMISSION_FINE_LOCATION) {
+                // This was a location request
                 locationTracker.startTracking();
             } else if (requestCode == MessageManager.REQUEST_CODE_PERMISSION_SEND_TEXT) {
-
+                // This was a SMS request
+                setPhoneNumber();
             }
-
         } else {
             // the user has denied our request! =-O
             if (ActivityCompat.shouldShowRequestPermissionRationale(
                     this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
                 // Show a UI to explain the necessity of the permission
-                Toast toast = Toast.makeText(app, PERMISSION_REQ_MSG, Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(app, LOCATION_PERMISSION_REQ_MSG, Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER, 0, 0);
+                toast.show();
+            } else if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.SEND_SMS)) {
+                // Show a UI to explain the necessity of the permission
+                Toast toast = Toast.makeText(app, SMS_PERMISSION_REQ_MSG, Toast.LENGTH_LONG);
                 toast.setGravity(Gravity.CENTER, 0, 0);
                 toast.show();
             }
@@ -373,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
             locationTracker.stopTracking();
         }
         unregisterReceiver(locationBroadcastReceiver);
-        unregisterReceiver(smsBroadcastReceiver);
+        localBroadcastManager.unregisterReceiver(smsBroadcastReceiver);
     }
 
     @Override
@@ -382,6 +504,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Resume MessageManager
         messageManager.retrieveData();
+        if (messageManager.getPhone() != null && !messageManager.getPhone().isEmpty()) {
+            toggleSmsButtons(true);
+        }
 
         // Resume LocationTracker
         if (locationTracker.isTracking()) {

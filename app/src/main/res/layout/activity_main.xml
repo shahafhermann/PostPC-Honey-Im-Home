@@ -208,53 +208,97 @@
        />
 
    <!-- Actions -->
-   <!-- Clear Home -->
-   <Button
-       android:id="@+id/clearButton"
+
+   <LinearLayout
+       android:id="@+id/layoutButtons"
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
-       app:layout_constraintBottom_toTopOf="@id/setButton"
-       app:layout_constraintStart_toStartOf="@id/setButton"
-       app:layout_constraintEnd_toEndOf="@id/setButton"
-
-       android:layout_marginStart="24dp"
-       android:layout_marginEnd="24dp"
-       android:textSize="16sp"
-       android:text="@string/clear_home"
-       android:enabled="false"
-       />
-
-   <!-- Set Home -->
-   <Button
-       android:id="@+id/setButton"
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       app:layout_constraintBottom_toTopOf="@id/trackButton"
+       android:orientation="vertical"
+       app:layout_constraintBottom_toBottomOf="parent"
        app:layout_constraintStart_toStartOf="parent"
 
        android:layout_marginStart="24dp"
        android:layout_marginEnd="24dp"
-       android:layout_marginBottom="10dp"
-       android:textSize="16sp"
-       android:text="@string/set_home"
-       android:enabled="false"
-       />
-
-   <!-- Track -->
-   <Button
-       android:id="@+id/trackButton"
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       app:layout_constraintBottom_toBottomOf="parent"
-       app:layout_constraintStart_toStartOf="@id/setButton"
-       app:layout_constraintEnd_toEndOf="@id/setButton"
-
-       android:layout_marginStart="24dp"
-       android:layout_marginEnd="24dp"
        android:layout_marginBottom="16dp"
-       android:textSize="16sp"
-       android:text="@string/start_tracking"
-       android:theme="@style/StartTrackingButton"
-       />
+       android:weightSum="4">
+
+      <LinearLayout
+          android:id="@+id/layoutHomeButtons"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          app:layout_constraintBottom_toTopOf="@id/trackButton"
+          app:layout_constraintStart_toStartOf="parent"
+
+          android:weightSum="2"
+          android:layout_weight="1">
+
+         <!-- Set Home -->
+         <Button
+             android:id="@+id/setHomeButton"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_weight="1"
+
+             android:layout_marginEnd="2dp"
+             android:textSize="16sp"
+             android:text="@string/set_home"
+             android:enabled="false"
+             />
+
+         <!-- Clear Home -->
+         <Button
+             android:id="@+id/clearButton"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_weight="1"
+
+             android:layout_marginStart="2dp"
+             android:textSize="16sp"
+             android:text="@string/clear_home"
+             android:enabled="false"
+             />
+
+      </LinearLayout>
+
+      <!-- Track -->
+      <Button
+          android:id="@+id/trackButton"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+
+          android:textSize="16sp"
+          android:text="@string/start_tracking"
+          android:backgroundTint="@color/start_tracking_button"
+          android:textColor="@color/start_tracking_button_text"
+          />
+
+      <!-- Set Phone / Test SMS -->
+      <Button
+          android:id="@+id/setPhoneButton"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+
+          android:textSize="16sp"
+          android:text="@string/set_phone"
+          android:backgroundTint="@color/sms_button"
+          android:textColor="@color/sms_button_text"
+          />
+
+      <!-- Set Phone / Test SMS -->
+      <Button
+          android:id="@+id/deletePhoneButton"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+
+          android:textSize="16sp"
+          android:text="@string/delete_phone"
+          android:enabled="false"
+          />
+
+   </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

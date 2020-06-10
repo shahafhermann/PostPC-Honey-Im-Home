@@ -5,6 +5,8 @@ import android.os.Build;
 
 public class App extends Application {
 
+    public final String NAME = "Honey I'm Home!";
+
     private LocationTracker locationTracker;
     private MessageManager messageManager;
 
