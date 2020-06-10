@@ -34,7 +34,7 @@ public class LocationTracker {
 
     private static final int LOCATION_REFRESH_TIME = 5000;
     private static final int LOCATION_REFRESH_DISTANCE = 10;
-    public static final int REQUEST_CODE_PERMISSION_FINE_LOCATION = 1234;
+    public static final int REQUEST_CODE_PERMISSION_FINE_LOCATION = 111;
     public static final String LOCATION_CHANGED_ACTION = "locationChanged";
     public static final String STOPPED_TRACKING_ACTION = "stoppedTracking";
     public static final String SET_HOME_ACTION = "setHome";

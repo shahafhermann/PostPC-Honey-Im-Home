@@ -3,15 +3,19 @@ package com.ppc.honeyimhome;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -25,8 +29,10 @@ public class MainActivity extends AppCompatActivity {
 
     private App app;
     private LocationTracker locationTracker;
+    private MessageManager messageManager;
     private Activity mainActivity = this;
-    BroadcastReceiver broadcastReceiver;
+    BroadcastReceiver locationBroadcastReceiver;
+    BroadcastReceiver smsBroadcastReceiver;
 
     private Button trackButton;
     private Button setHomeButton;
@@ -44,9 +50,11 @@ public class MainActivity extends AppCompatActivity {
 
         app = (App) getApplicationContext();
         locationTracker = app.getLocationTracker();
+        messageManager = app.getMessageManager();
 
         setViews();
-        setBroadcastReceiver();
+        setLocationBroadcastReceiver();
+        setSmsBroadcastReceiver();
     }
 
     private void setViews() {
@@ -67,15 +75,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Set a broadcast receiver
+     * Set a location broadcast receiver
      */
-    private void setBroadcastReceiver() {
-        broadcastReceiver = new locationBroadcastReceiver();
+    private void setLocationBroadcastReceiver() {
+        locationBroadcastReceiver = new locationBroadcastReceiver();
         IntentFilter filter = new IntentFilter(LocationTracker.LOCATION_CHANGED_ACTION);
         filter.addAction(LocationTracker.STOPPED_TRACKING_ACTION);
         filter.addAction(LocationTracker.SET_HOME_ACTION);
         filter.addAction(LocationTracker.CLEAR_HOME_ACTION);
-        this.registerReceiver(broadcastReceiver, filter);
+        this.registerReceiver(locationBroadcastReceiver, filter);
     }
 
     /**
@@ -111,6 +119,62 @@ public class MainActivity extends AppCompatActivity {
                     toggleClearButton(false);
                     updateHomeLocationLabels(true);
                     break;
+            }
+        }
+    }
+
+    /**
+     * Set a SMS broadcast receiver
+     */
+    private void setSmsBroadcastReceiver() {
+        smsBroadcastReceiver = new LocalSendSmsBroadcastReceiver();
+        IntentFilter filter = new IntentFilter(MessageManager.SEND_SMS_ACTION);
+        this.registerReceiver(smsBroadcastReceiver, filter);
+    }
+
+    /**
+     * A SMS broadcast receiver
+     */
+    private class LocalSendSmsBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ActivityCompat
+                    .checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
+                    PackageManager.PERMISSION_GRANTED) {
+
+                String phone = intent.getStringExtra(MessageManager.PHONE_NUMBER_KEY);
+                String content = intent.getStringExtra(MessageManager.SMS_CONTENT_KEY);
+                if (phone == null || phone.isEmpty() || content == null || content.isEmpty()) {
+                    Log.e(MessageManager.ERROR_TAG, "Phone or content invalid");
+                }
+
+                messageManager.sendText(intent);
+
+                messageManager.createNotificationChannel(context, intent);
+
+                Intent intentToOpen = new Intent(app, MainActivity.class);
+                intentToOpen
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                PendingIntent pendingIntent = PendingIntent
+                        .getActivity(app, 0, intentToOpen, 0);
+
+                NotificationCompat.Builder builder = new NotificationCompat
+                        .Builder(app, MessageManager.NTFC_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.notification_icon)
+                        .setContentTitle("My notification")
+                        .setContentText("Hello World!")
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        // Set the intent that will fire when the user taps the notification
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true);
+
+                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(app);
+
+                // notificationId is a unique int for each notification that you must define
+                notificationManager.notify(MessageManager.NTFC_ID, builder.build());
+
+            } else {  // No permission
+                Log.e(MessageManager.ERROR_TAG, "No SMS permission granted");
             }
         }
     }
@@ -281,8 +345,13 @@ public class MainActivity extends AppCompatActivity {
         // depending on your use case, if you get only SOME of your permissions
         // (but not all of them), you can act accordingly
 
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            locationTracker.startTracking(); // cool
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) { // cool
+            if (requestCode == LocationTracker.REQUEST_CODE_PERMISSION_FINE_LOCATION) {
+                locationTracker.startTracking();
+            } else if (requestCode == MessageManager.REQUEST_CODE_PERMISSION_SEND_TEXT) {
+
+            }
+
         } else {
             // the user has denied our request! =-O
             if (ActivityCompat.shouldShowRequestPermissionRationale(
@@ -303,13 +372,18 @@ public class MainActivity extends AppCompatActivity {
         if (locationTracker.isTracking()) {
             locationTracker.stopTracking();
         }
-        unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(locationBroadcastReceiver);
+        unregisterReceiver(smsBroadcastReceiver);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
+        // Resume MessageManager
+        messageManager.retrieveData();
+
+        // Resume LocationTracker
         if (locationTracker.isTracking()) {
             locationTracker.startTracking();
         } else {
