@@ -2,6 +2,9 @@ package com.ppc.honeyimhome;
 
 import android.location.Location;
 
+/**
+ * Wrapper class for Location
+ */
 public class LocationInfo {
 
     private double latitude;

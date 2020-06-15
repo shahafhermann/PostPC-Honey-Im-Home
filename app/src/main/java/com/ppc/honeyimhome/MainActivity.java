@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.work.WorkManager;
 
 import android.Manifest;
 import android.app.Activity;
@@ -18,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.location.Location;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
@@ -40,8 +42,6 @@ public class MainActivity extends AppCompatActivity {
     private MessageManager messageManager;
     private Activity mainActivity = this;
     BroadcastReceiver locationBroadcastReceiver;
-    BroadcastReceiver smsBroadcastReceiver;
-    LocalBroadcastManager localBroadcastManager;
 
     private Button smsButton;
     private Button deletePhoneButton;
@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
         setViews();
         setLocationBroadcastReceiver();
-        setSmsBroadcastReceiver();
     }
 
     private void setViews() {
@@ -138,70 +137,6 @@ public class MainActivity extends AppCompatActivity {
                     toggleClearButton(false);
                     updateHomeLocationLabels(true);
                     break;
-            }
-        }
-    }
-
-    /**
-     * Set a SMS broadcast receiver
-     */
-    private void setSmsBroadcastReceiver() {
-        localBroadcastManager = LocalBroadcastManager.getInstance(this);
-        smsBroadcastReceiver = new LocalSendSmsBroadcastReceiver();
-        IntentFilter filter = new IntentFilter(MessageManager.SEND_SMS_ACTION);
-        localBroadcastManager.registerReceiver(smsBroadcastReceiver, filter);
-    }
-
-    /**
-     * A SMS broadcast receiver
-     */
-    private class LocalSendSmsBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (ActivityCompat
-                    .checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
-                    PackageManager.PERMISSION_GRANTED) {
-
-                String phone = intent.getStringExtra(MessageManager.PHONE_NUMBER_KEY);
-                String content = intent.getStringExtra(MessageManager.SMS_CONTENT_KEY);
-                if (phone == null || phone.isEmpty() || content == null || content.isEmpty()) {
-                    Log.e(MessageManager.ERROR_TAG, "Phone or content invalid");
-                }
-
-                // Notification
-
-                messageManager.createNotificationChannel(context);
-
-                Intent intentToOpen = new Intent(app, MainActivity.class);
-                intentToOpen
-                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                PendingIntent pendingIntent = PendingIntent
-                        .getActivity(app, 0, intentToOpen, 0);
-
-                String ntfcBody = String.format("sending sms to %s: %s", phone, content);
-                NotificationCompat.Builder builder = new NotificationCompat
-                        .Builder(app, MessageManager.NTFC_CHANNEL_ID)
-                        .setSmallIcon(R.drawable.notification_icon)
-                        .setContentTitle(app.NAME)
-                        .setContentText(ntfcBody)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        // Make sure it shows the full text
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText(ntfcBody))
-                        // Set the intent that will fire when the user taps the notification
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
-
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(app);
-
-                // notificationId is a unique int for each notification that you must define
-                notificationManager.notify(MessageManager.NTFC_ID, builder.build());
-
-                // Actually send
-                messageManager.sendText(intent);
-
-            } else {  // No permission
-                Log.e(MessageManager.ERROR_TAG, "No SMS permission granted");
             }
         }
     }
@@ -385,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
                 smsIntent.setAction(MessageManager.SEND_SMS_ACTION);
                 smsIntent.putExtra(MessageManager.PHONE_NUMBER_KEY, phone);
                 smsIntent.putExtra(MessageManager.SMS_CONTENT_KEY, smsContent);
-                localBroadcastManager.sendBroadcast(smsIntent);
+                app.getLocalBroadcastManager().sendBroadcast(smsIntent);
             } else {
                 if (messageManager.hasSmsPermission()) {
                     // Set the phone number
@@ -495,7 +430,6 @@ public class MainActivity extends AppCompatActivity {
             locationTracker.stopTracking();
         }
         unregisterReceiver(locationBroadcastReceiver);
-        localBroadcastManager.unregisterReceiver(smsBroadcastReceiver);
     }
 
     @Override
@@ -511,17 +445,21 @@ public class MainActivity extends AppCompatActivity {
         // Resume LocationTracker
         if (locationTracker.isTracking()) {
             locationTracker.startTracking();
+            toggleLocationInfoLabels(true);
         } else {
             toggleLocationInfoLabels(false);
         }
+
         updateLocationInfoLabels();
-        LocationInfo home = locationTracker.retrieveData();
+        locationTracker.retrieveData();
+        LocationInfo home = locationTracker.getHomeLocation();
         if (home == null) {
             toggleClearButton(false);
         } else {
             toggleClearButton(true);
             updateHomeLocationLabels(false);
         }
+
         if (locationTracker.getCurrentLocation().getAccuracy() < 50) {
             toggleSetHomeButton(true);
         } else {

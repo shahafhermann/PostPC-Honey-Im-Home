@@ -39,6 +39,9 @@ public class LocationTracker {
     public static final String STOPPED_TRACKING_ACTION = "stoppedTracking";
     public static final String SET_HOME_ACTION = "setHome";
     public static final String CLEAR_HOME_ACTION = "clearHome";
+    public static final String GOOD_ACCURACY_ACTION = "goodAccuracy";
+
+    private boolean isWorker;
 
     /**
      * Location Listener. When the location is changed, get it's info and broadcast.
@@ -47,7 +50,13 @@ public class LocationTracker {
         @Override
         public void onLocationChanged(final Location location) {
             curLocation = new LocationInfo(location);
-            fireIntent(LOCATION_CHANGED_ACTION);
+            if (isWorker) {
+                if (location.getAccuracy() < 50) {
+                    fireIntent(GOOD_ACCURACY_ACTION);
+                }
+            } else {
+                fireIntent(LOCATION_CHANGED_ACTION);
+            }
         }
 
         /* The following are deprecated */
@@ -68,9 +77,10 @@ public class LocationTracker {
      * Constructor for the tracker
      * @param context The application context
      */
-    public LocationTracker(Context context) {
+    public LocationTracker(Context context, boolean isWorker) {
         this.context = context;
         this.isTracking = false;
+        this.isWorker = isWorker;
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         retrieveData();
 
@@ -78,10 +88,12 @@ public class LocationTracker {
                 context.getSystemService(LOCATION_SERVICE);
     }
 
+    public SharedPreferences getPrefs() { return prefs; }
+
     /**
      * Get the most updated data from SharedPreference
      */
-    public LocationInfo retrieveData() {
+    public void retrieveData() {
         Gson gson = new Gson();
         String json = prefs.getString(SP_HOME_LOCATION, "");
         homeLocation = gson.fromJson(json, LocationInfo.class);
@@ -93,8 +105,6 @@ public class LocationTracker {
         }
 
         isTracking = prefs.getBoolean(SP_IS_TRACKING, false);
-
-        return homeLocation;
     }
 
     private void fireIntent(String action) {

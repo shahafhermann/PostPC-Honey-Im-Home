@@ -15,8 +15,6 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 
-import com.google.gson.Gson;
-
 public class MessageManager {
 
     private Context context;
@@ -57,6 +55,10 @@ public class MessageManager {
         this.curPhone = prefs.getString(SP_PHONE, "");
     }
 
+    /**
+     * Send a text message
+     * @param intent intent with text info
+     */
     public void sendText(Intent intent) {
         String content = intent.getStringExtra(SMS_CONTENT_KEY);
         PendingIntent sentIntent = PendingIntent
@@ -65,6 +67,10 @@ public class MessageManager {
         smsManager.sendTextMessage(curPhone, null, content, sentIntent, null);
     }
 
+    /**
+     * Create a notification channel
+     * @param context
+     */
     public void createNotificationChannel(Context context) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -86,8 +92,15 @@ public class MessageManager {
         }
     }
 
+    /**
+     * Get the registered phone number
+     */
     public String getPhone() { return curPhone; }
 
+    /**
+     * Set a new phone number
+     * @param number The number to set
+     */
     public void setPhone(String number) {
         this.curPhone = number;
         prefs.edit()
