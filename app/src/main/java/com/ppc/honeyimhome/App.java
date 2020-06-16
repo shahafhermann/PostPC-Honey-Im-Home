@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.IntentFilter;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.Operation;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -69,7 +70,7 @@ public class App extends Application {
                         .Builder(RepeatedLocationWork.class, 15, TimeUnit.MINUTES)
                         .build();
         // Init the work manager with above work
-        WorkManager
+        final Operation locationWork = WorkManager
                 .getInstance(this)
                 .enqueueUniquePeriodicWork("locationWork",
                         ExistingPeriodicWorkPolicy.REPLACE,

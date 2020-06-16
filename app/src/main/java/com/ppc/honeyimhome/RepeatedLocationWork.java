@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.work.ListenableWorker;
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+import androidx.work.WorkManager;
 import androidx.work.WorkerParameters;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -32,7 +33,7 @@ public class RepeatedLocationWork extends ListenableWorker {
     private static final String SP_PREV_LOCATION = "prevLocation";
     private static final String smsContent = "Honey I'm Home!";
 
-    public RepeatedLocationWork(@NonNull Context context, @NonNull WorkerParameters params) {
+    public RepeatedLocationWork(Context context, WorkerParameters params) {
         super(context, params);
         this.app = (App) context.getApplicationContext();
         this.context = context;
@@ -41,7 +42,7 @@ public class RepeatedLocationWork extends ListenableWorker {
 
     @Override
     public ListenableFuture<Result> startWork() {
-        Log.e("start", "worker started");
+        Log.e("start", "worker started"); // todo delete
 
         ListenableFuture<Result> future = CallbackToFutureAdapter
                 .getFuture(new CallbackToFutureAdapter.Resolver<Result>() {
@@ -58,7 +59,7 @@ public class RepeatedLocationWork extends ListenableWorker {
         LocationTracker locationTracker = app.getLocationTracker();
 
         // Check send-SMS and fine-location permissions
-        if (!messageManager.hasSmsPermission() || ! locationTracker.hasLocationPermission()) {
+        if (!messageManager.hasSmsPermission() || !locationTracker.hasLocationPermission()) {
             callback.set(Result.success());
             return future;
         }
@@ -66,16 +67,15 @@ public class RepeatedLocationWork extends ListenableWorker {
         // Check if we have a phone number and home location saved in SP
         messageManager.retrieveData();
         locationTracker.retrieveData();
-        if (messageManager.getPhone().isEmpty() || messageManager.getPhone() == null ||
-            locationTracker.getHomeLocation() == null) {
+        if (messageManager.getPhone() == null || locationTracker.getHomeLocation() == null) {
             callback.set(Result.success());
             return future;
         }
 
         // Start tracking (use a new location tracker to not interfere with the one that's
         // controlled by the main activity
-        newTracker.startTracking();
         placeReceiver();
+        newTracker.startTracking();
 
         return future;
     }
@@ -91,7 +91,7 @@ public class RepeatedLocationWork extends ListenableWorker {
             }
         };
         IntentFilter filter = new IntentFilter(LocationTracker.GOOD_ACCURACY_ACTION);
-        getApplicationContext().registerReceiver(broadcastReceiver, filter);
+        context.registerReceiver(broadcastReceiver, filter);
     }
 
     /**
@@ -105,17 +105,11 @@ public class RepeatedLocationWork extends ListenableWorker {
         Gson gson = new Gson();
         String json = prefs.getString(SP_PREV_LOCATION, "");
         prevLocation = gson.fromJson(json, LocationInfo.class);
-        boolean wasNull = false;
-        if (prevLocation == null) {
-            prevLocation = new LocationInfo();
-            wasNull = true;
-        }
 
         // If we get to the second condition then prevLocation is not null
-        if (wasNull || distance(prevLocation, curLocation)[0] < 50) {
+        if (prevLocation == null || distance(prevLocation, curLocation)[0] < 50) {
             // Save current as previous and return success
-            updatePrevLocation(prefs, curLocation);
-            callback.set(Result.success());
+            finishWork(prefs, curLocation);
             return;
         }
 
@@ -132,8 +126,7 @@ public class RepeatedLocationWork extends ListenableWorker {
         }
 
         // Either way, update prevLocation as current and return success
-        updatePrevLocation(prefs, curLocation);
-        callback.set(Result.success());
+        finishWork(prefs, curLocation);
     }
 
     /**
@@ -162,5 +155,15 @@ public class RepeatedLocationWork extends ListenableWorker {
         prefs.edit()
                 .putString(SP_PREV_LOCATION, gson.toJson(curLocation))
                 .apply();
+    }
+
+    private void finishWork(SharedPreferences prefs, LocationInfo curLocation) {
+        Gson gson = new Gson();
+        prefs.edit()
+                .putString(SP_PREV_LOCATION, gson.toJson(curLocation))
+                .apply();
+
+        context.unregisterReceiver(broadcastReceiver);
+        callback.set(Result.success());
     }
 }

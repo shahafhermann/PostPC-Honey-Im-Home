@@ -161,7 +161,8 @@ public class LocationTracker {
                 .putBoolean(SP_IS_TRACKING, isTracking)
                 .apply();
 
-        boolean hasLocationPermission = ActivityCompat  // todo WTF
+        // The following line is required by the compiler for no reason
+        boolean hasLocationPermission = ActivityCompat
                 .checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED;
 
@@ -183,11 +184,13 @@ public class LocationTracker {
      */
     public void stopTracking() {
         this.isTracking = false;
-        prefs.edit()
-                .putBoolean(SP_IS_TRACKING, isTracking)
-                .apply();
-        locationManager.removeUpdates(locationListener);
-        fireIntent(STOPPED_TRACKING_ACTION);
+        this.locationManager.removeUpdates(this.locationListener);
+        if (!this.isWorker) {
+            prefs.edit()
+                    .putBoolean(SP_IS_TRACKING, isTracking)
+                    .apply();
+            fireIntent(STOPPED_TRACKING_ACTION);
+        }
     }
 
     /**

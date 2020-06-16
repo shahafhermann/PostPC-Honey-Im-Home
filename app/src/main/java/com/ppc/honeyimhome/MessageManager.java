@@ -102,10 +102,17 @@ public class MessageManager {
      * @param number The number to set
      */
     public void setPhone(String number) {
-        this.curPhone = number;
-        prefs.edit()
-                .putString(SP_PHONE, curPhone)
-                .apply();
+        if (number.isEmpty()) {
+            this.curPhone = null;
+            prefs.edit()
+                    .remove(SP_PHONE)
+                    .apply();
+        } else {
+            this.curPhone = number;
+            prefs.edit()
+                    .putString(SP_PHONE, curPhone)
+                    .apply();
+        }
     }
 
     /**
